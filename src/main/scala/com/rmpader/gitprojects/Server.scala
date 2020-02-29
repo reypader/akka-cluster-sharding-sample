@@ -1,15 +1,24 @@
 package com.rmpader.gitprojects
 
 import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.{Behavior, PostStop}
+import akka.actor.typed.{Behavior, PostStop, Scheduler}
 import akka.actor.typed.scaladsl.adapter._
+import akka.cluster.sharding.typed.ShardingEnvelope
+import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityRef, EntityTypeKey}
 import akka.http.scaladsl.server.PathMatchers._
 import akka.http.scaladsl.server.PathMatcher._
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
-import akka.http.scaladsl.server.Directives.{complete, get, path}
+import akka.http.scaladsl.server.Directives.{complete, get, onSuccess, path}
+import akka.actor.typed.scaladsl.AskPattern._
+import akka.management.cluster.bootstrap.ClusterBootstrap
+import akka.management.scaladsl.AkkaManagement
+import akka.persistence.typed.PersistenceId
+import akka.util.Timeout
+import com.typesafe.config.{Config, ConfigFactory}
 
+import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success}
 
@@ -24,14 +33,25 @@ object Server {
   case object Stop extends Message
 
   def apply(host: String, port: Int): Behavior[Message] = Behaviors.setup { ctx =>
-
     val system = ctx.system
+
+
+
+    val sharding = ClusterSharding(system)
+
+    implicit val scheduler: Scheduler = ctx.system.scheduler
     implicit val untypedSystem: akka.actor.ActorSystem = ctx.system.toClassic
     implicit val ec: ExecutionContextExecutor = ctx.system.executionContext
 
+    val TypeKey = EntityTypeKey[Counter.Command]("Counter")
+    val shardRegion = sharding.init(Entity(TypeKey)(createBehavior = entityContext => Counter(entityContext.entityId, PersistenceId(entityContext.entityTypeKey.name, entityContext.entityId))))
+    implicit val timeout: Timeout = 3.seconds
     val routes = get {
-      path("count" / IntNumber) { counterId =>
-        complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, s"id:$counterId"))
+      path("count" / Segment) { counterId =>
+        val result = shardRegion.ask[Int](ref => ShardingEnvelope(counterId, Counter.Increment(ref)))
+        onSuccess(result) { v =>
+          complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, s"id:$counterId, value:$v"))
+        }
       }
     }
 
