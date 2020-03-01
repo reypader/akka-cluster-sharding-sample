@@ -22,14 +22,14 @@ object Counter {
     command match {
       case Increment(replyTo) =>
         val newVal = state.value + 1
-        context.log.info(s"Increment $entityId to $newVal")
+        context.log.info(s"Increment Counter $entityId to $newVal")
         Effect.persist(Incremented(newVal)).thenReply(replyTo) { _ => newVal }
     }
   }
   def eventHandler(entityId:String, context: ActorContext[Command]): (State, Event) => State = { (state, event) =>
     event match {
       case Incremented(newVal) =>
-        context.log.info(s"Incremented $entityId to $newVal")
+        context.log.info(s"Incremented Counter $entityId to $newVal")
         state.copy(value = newVal)
     }
   }

@@ -24,6 +24,8 @@ import scala.util.{Failure, Success}
 
 object Server {
 
+
+
   sealed trait Message
 
   private final case class StartFailed(cause: Throwable) extends Message
@@ -34,8 +36,6 @@ object Server {
 
   def apply(host: String, port: Int): Behavior[Message] = Behaviors.setup { ctx =>
     val system = ctx.system
-
-
 
     val sharding = ClusterSharding(system)
 
@@ -48,6 +48,7 @@ object Server {
     implicit val timeout: Timeout = 3.seconds
     val routes = get {
       path("count" / Segment) { counterId =>
+        ctx.log.info(s"Received Increment request for Counter $counterId")
         val result = shardRegion.ask[Int](ref => ShardingEnvelope(counterId, Counter.Increment(ref)))
         onSuccess(result) { v =>
           complete(HttpEntity(ContentTypes.`text/plain(UTF-8)`, s"id:$counterId, value:$v"))
