@@ -17,13 +17,12 @@ import akka.stream.ActorMaterializer
 
 import scala.concurrent.Future
 
-class Main(nr: Int) {
-  val configuration: Config = ConfigFactory.parseString(
-    s"""
-      akka.remote.artery.canonical.hostname = "127.0.0.$nr"
-      akka.management.http.hostname = "127.0.0.$nr"
-    """).withFallback(ConfigFactory.load())
-  val system: ActorSystem[Server.Message] = ActorSystem(Server("localhost", 8080+nr), "ClusterProcessor", configuration)
+object Main extends App {
+  val configuration: Config = ConfigFactory.load()
+  val host = configuration.getString("app.host")
+  val port = configuration.getInt("app.port")
+  val name = configuration.getString("app.name")
+  val system: ActorSystem[Server.Message] = ActorSystem(Server(host, port), name, configuration)
   AkkaManagement(system).start()
   ClusterBootstrap(system).start()
   val cs: CoordinatedShutdown = CoordinatedShutdown(system)
@@ -33,6 +32,5 @@ class Main(nr: Int) {
       Future.successful(Done)
     }
   }
-
 }
 

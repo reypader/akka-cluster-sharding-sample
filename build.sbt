@@ -33,6 +33,6 @@ libraryDependencies += "com.github.dnvriend" %% "akka-persistence-jdbc" % "3.5.2
 enablePlugins(AshScriptPlugin)
 enablePlugins(JavaServerAppPackaging)
 
-
+mainClass in Compile := Some("com.rmpader.gitprojects.App")
 dockerBaseImage := "openjdk:8-alpine"
-dockerExposedPorts := Seq(8558, 8080, 2552)
+dockerExposedPorts := Seq(8558, 2552, 8080)
