@@ -39,3 +39,7 @@ $ curl http://localhost:8083/count/1
 $ curl http://localhost:8083/count/2
 $ curl http://localhost:8083/count/3
 ```
+
+### Kubernetes Deployment
+
+Also included are sample Kubernetes service and deployment definition files in the `./kube` directory.

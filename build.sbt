@@ -14,6 +14,7 @@ description :="""
             Instance B <─┘
     """
 
+libraryDependencies += "com.lightbend.akka.management" %% "akka-management-cluster-http" % "1.0.5"
 libraryDependencies += "com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % "1.0.5"
 libraryDependencies += "com.lightbend.akka.management" %% "akka-management" % "1.0.5"
 libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.1.11"

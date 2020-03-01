@@ -12,6 +12,8 @@ export CONF_FILE_NAME=local-2.conf
 sbt -J-Dnode=NODE_2 'runMain com.rmpader.gitprojects.Main' >> logs/log.txt &
 NODE_2=$!
 
+read -n1 -rsp "Simulate late third node joining. Press any key to start the third node" key
+
 export CONF_FILE_NAME=local-3.conf
 sbt -J-Dnode=NODE_3 'runMain com.rmpader.gitprojects.Main' >> logs/log.txt &
 NODE_3=$!
