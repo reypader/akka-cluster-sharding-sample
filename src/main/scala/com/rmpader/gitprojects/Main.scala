@@ -19,10 +19,12 @@ import scala.concurrent.Future
 
 object Main extends App {
   val configuration: Config = ConfigFactory.load()
-  val host = configuration.getString("app.host")
-  val port = configuration.getInt("app.port")
-  val name = configuration.getString("app.name")
-  val system: ActorSystem[Server.Message] = ActorSystem(Server(host, port), name, configuration)
+  val envConfiguration: Config = ConfigFactory.load(configuration.getString("app.config-env"))
+    .withFallback(configuration)
+  val host = envConfiguration.getString("app.host")
+  val port = envConfiguration.getInt("app.port")
+  val name = envConfiguration.getString("app.name")
+  val system: ActorSystem[Server.Message] = ActorSystem(Server(host, port), name, envConfiguration)
   AkkaManagement(system).start()
   ClusterBootstrap(system).start()
   val cs: CoordinatedShutdown = CoordinatedShutdown(system)
